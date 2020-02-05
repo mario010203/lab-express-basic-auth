@@ -8,9 +8,11 @@ const hbs = require("hbs");
 const mongoose = require("mongoose");
 const logger = require("morgan");
 const path = require("path");
+const session = require("express-session");
+const MongoStore = require("connect-mongo")(session);
 
 mongoose
-  .connect(process.env.MONGODB_URL, {
+  .connect(process.env.MONGODB, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
@@ -36,6 +38,28 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
+//Session 
+app.use(
+  session({
+    secret: "session-cookie",
+    cookie: { maxAge: 60 * 1000 }, // 60 seconds
+    store: new MongoStore({
+      mongooseConnection: mongoose.connection,
+      resave: true,
+      saveUninitialized: false,
+      ttl: 24 * 60 * 60 // 1 day
+    })
+  })
+);
+
+//Middleware for current session
+
+app.use((req, res, next) => {
+  console.log(req.session);
+  res.locals.user = req.session.currentUser;
+  next();
+});
+
 // Express View engine setup
 
 app.use(
@@ -60,5 +84,8 @@ app.use("/", indexRouter);
 
 const authRouter = require("./routes/auth.router");
 app.use("/auth", authRouter);
+
+const siteRouter = require("./routes/site.router");
+app.use("/", siteRouter); // manages private routes
 
 module.exports = app;
