@@ -12,7 +12,7 @@ const session = require("express-session");
 const MongoStore = require("connect-mongo")(session);
 
 mongoose
-  .connect(process.env.MONGODB, {
+  .connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
@@ -38,7 +38,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-//Session 
+//Session
 app.use(
   session({
     secret: "session-cookie",
